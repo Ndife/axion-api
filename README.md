@@ -43,6 +43,7 @@ erDiagram
 
     Student {
         ObjectId _id
+        String studentId "Auto-generated STU-XXXXXX"
         String firstName
         String lastName
         Number age
@@ -80,7 +81,7 @@ This API utilizes a **Hybrid Token Architecture** to balance maximum security (r
 
 1.  **Start MongoDB Replica Set & Redis**:
     ```bash
-    docker-compose up -d
+    docker compose up -d
     ```
 2.  **Install Dependencies**:
     ```bash
@@ -112,10 +113,10 @@ This API utilizes a **Hybrid Token Architecture** to balance maximum security (r
 
 ## 🛡️ ACID Transactions & Race Conditions Mitigation
 
-To strictly adhere to enterprise-grade RESTful API best practices, this system inherently handles **Idempotency** and **Race Conditions** out-of-the-box.
+The system handles race conditions natively for capacity-constrained operations.
 
-When executing endpoints like `/api/student/createStudent` or `/api/student/transferStudent`, the API interacts with both the `Student` and `Classroom` documents to enforce capacity limits (`currentStudents` vs `capacity`).
-To prevent partial fail states natively during heavy load, all multi-document operations are executed within native **MongoDB Transactions** (`session.startTransaction()`). If two concurrent requests attempt to claim the exact same final classroom seat, MongoDB ensures that exactly one transaction successfully commits while the other safely aborts without mutating data.
+When hitting endpoints like `/api/student/createStudent` or `/api/student/transferStudent`, the API updates both the `Student` and `Classroom` documents to strictly enforce capacity limits.
+To prevent partial fail states during concurrent requests, these multi-document operations execute inside native **MongoDB Transactions** (`session.startTransaction()`). If two concurrent requests attempt to claim the final classroom seat, MongoDB ensures only one transaction successfully commits while the other safely aborts.
 
 ---
 
@@ -180,7 +181,7 @@ To prevent partial fail states natively during heavy load, all multi-document op
 
 #### Update School
 
-- **PUT** `/api/school/updateSchool`
+- **PATCH** `/api/school/updateSchool`
 - **Body:** `{ "id", "name"?, "address"?, "email"?, "phone"? }`
 
 #### Delete School
@@ -204,6 +205,26 @@ _Note: School Admins are securely restricted in backend logic to only modifying/
 - **GET** `/api/classroom/getClassrooms`
 - **Body:** `{ "schoolId"?, "page"?, "limit"? }` (Ignored if School Admin. Pagination defaults to `page=1, limit=10`)
 
+#### Get Specific Classroom
+
+- **GET** `/api/classroom/getClassroom`
+- **Body:** `{ "id" }`
+
+#### Update Classroom
+
+- **PATCH** `/api/classroom/updateClassroom`
+- **Body:** `{ "id", "name"?, "capacity"?, "schoolId"? }`
+
+#### Add Resource
+
+- **POST** `/api/classroom/addResource`
+- **Body:** `{ "id", "name", "quantity" }`
+
+#### Remove Resource
+
+- **DELETE** `/api/classroom/removeResource`
+- **Body:** `{ "id", "resourceId" }`
+
 #### Delete Classroom
 
 - **DELETE** `/api/classroom/deleteClassroom`
@@ -225,14 +246,19 @@ _Note: School Admins are strictly scoped to only managing their own students._
 - **GET** `/api/student/getStudents`
 - **Body:** `{ "schoolId"?, "classroomId"?, "page"?, "limit"? }` (Pagination defaults to `page=1, limit=10`)
 
+#### Get Specific Student
+
+- **GET** `/api/student/getStudent`
+- **Body:** `{ "id" }`
+
 #### Update Student Profile
 
-- **PUT** `/api/student/updateStudent`
+- **PATCH** `/api/student/updateStudent`
 - **Body:** `{ "id", "firstName"?, "lastName"?, "age"? }`
 
 #### Transfer Student
 
-- **PUT** `/api/student/transferStudent`
+- **PATCH** `/api/student/transferStudent`
 - **Body:** `{ "id", "newClassroomId"?, "newSchoolId"? }`
 - _Security Note: School Admins can only transfer students to a `newClassroomId` within their own school. Superadmins can transfer students to completely different schools using `newSchoolId`._
 
