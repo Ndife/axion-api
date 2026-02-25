@@ -1,4 +1,5 @@
 const emojis = require('../../public/emojis.data.json');
+const { ROLE_VALUES } = require('./constants');
 
 module.exports = {
     id: {
@@ -10,17 +11,23 @@ module.exports = {
         path: 'username',
         type: 'string',
         length: {min: 3, max: 20},
-        custom: 'username',
     },
     password: {
         path: 'password',
         type: 'string',
         length: {min: 8, max: 100},
     },
-    email: {
-        path: 'email',
+    role: {
+        path: 'role',
         type: 'string',
-        length: {min:3, max: 100},
+        length: { min: 5, max: 20 },
+        oneOf: ROLE_VALUES,
+    },
+    schoolId: {
+        path: 'schoolId',
+        type: 'string',
+        length: { min: 24, max: 24 },
+        regex: /^[a-fA-F0-9]{24}$/,
     },
     title: {
         path: 'title',
@@ -82,6 +89,7 @@ module.exports = {
         length: 13,
     },
     email: {
+        path: 'email',
         type: 'String',
         regex: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     },
