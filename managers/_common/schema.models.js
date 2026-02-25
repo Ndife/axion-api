@@ -5,7 +5,12 @@ module.exports = {
     id: {
         path: "id",
         type: "string",
-        length: { min: 1, max: 50 },
+        regex: /^[a-fA-F0-9]{24}$/,
+    },
+    name: {
+      path: 'name',
+      type: 'string',
+      length: { min: 3, max: 100 },
     },
     username: {
         path: 'username',
@@ -28,6 +33,16 @@ module.exports = {
         type: 'string',
         length: { min: 24, max: 24 },
         regex: /^[a-fA-F0-9]{24}$/,
+    },
+    page: {
+        path: 'page',
+        type: 'number',
+        length: { min: 1, max: 100 },
+    },
+    limit: {
+        path: 'limit',
+        type: 'number',
+        length: { min: 1, max: 100 },
     },
     title: {
         path: 'title',

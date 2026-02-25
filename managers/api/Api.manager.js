@@ -151,8 +151,10 @@ module.exports = class ApiHandler {
             /** executed after all middleware finished */
 
             let body = req.body || {};
+            let query = req.query || {};
             let result = await this._exec({targetModule: this.managers[moduleName], fnName, data: {
                 ...body, 
+                ...query,
                 ...results,
                 res,
             }});
@@ -163,11 +165,11 @@ module.exports = class ApiHandler {
             } else {
                 
                 if(result.errors){
-                    return this.managers.responseDispatcher.dispatch(res, {ok: false, errors: result.errors});
+                    return this.managers.responseDispatcher.dispatch(res, {ok: false, errors: result.errors, code: result.code});
                 } else if(result.error){
-                    return this.managers.responseDispatcher.dispatch(res, {ok: false, message: result.error});
+                    return this.managers.responseDispatcher.dispatch(res, {ok: false, message: result.error, code: result.code});
                 } else {
-                    return this.managers.responseDispatcher.dispatch(res, {ok:true, data: result});
+                    return this.managers.responseDispatcher.dispatch(res, {ok:true, data: result, code: result.code});
                 }
             }
         }});
