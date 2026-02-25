@@ -34,6 +34,12 @@ module.exports = {
         length: { min: 24, max: 24 },
         regex: /^[a-fA-F0-9]{24}$/,
     },
+    classroomId: {
+        path: 'classroomId',
+        type: 'string',
+        length: { min: 24, max: 24 },
+        regex: /^[a-fA-F0-9]{24}$/,
+    },
     page: {
         path: 'page',
         type: 'number',

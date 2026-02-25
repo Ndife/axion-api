@@ -83,7 +83,7 @@ module.exports = class School {
       __schoolAdmin.role === ROLES.SCHOOL_ADMIN &&
       school._id.toString() !== __schoolAdmin.schoolId
     ) {
-      return { ok: false, code: 401, error: 'Unauthorized to view this school' };
+      return { ok: false, code: 403, error: 'Unauthorized to view this school' };
     }
 
     return { school };
