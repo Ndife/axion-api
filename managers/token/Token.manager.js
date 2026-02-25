@@ -4,18 +4,19 @@ const md5        = require('md5');
 
 
 module.exports = class TokenManager {
-
-    constructor({config}){
+    constructor({config, oyster, cache}){
         this.config              = config;
+        this.oyster              = oyster;
+        this.cache               = cache;
         this.longTokenExpiresIn  = '3y';
-        this.shortTokenExpiresIn = '1y';
-
+        this.shortTokenExpiresIn = '15m';
+        this.userExposed         = ['v1_createShortToken'];
         this.httpExposed         = ['v1_createShortToken'];
     }
 
     /** 
      * short token are issue from long token 
-     * short tokens are issued for 72 hours 
+     * short tokens are issued for 15 minutes
      * short tokens are connected to user-agent
      * short token are used on the soft logout 
      * short tokens are used for account switch 
@@ -25,20 +26,25 @@ module.exports = class TokenManager {
      * long token contains immutable data and long lived
      * master key must exists on any device to create short tokens
      */
-    genLongToken({userId, userKey}){
+    genLongToken({userId, userKey, role, schoolId}){
+         const jti = nanoid();
         return jwt.sign(
             { 
                 userKey, 
                 userId,
+                role,
+                schoolId,
+                jti,
             }, 
             this.config.dotEnv.LONG_TOKEN_SECRET, 
             {expiresIn: this.longTokenExpiresIn
         })
     }
 
-    genShortToken({userId, userKey, sessionId, deviceId}){
+    genShortToken({userId, userKey, sessionId, deviceId, role, schoolId}){
+         const jti = nanoid();
         return jwt.sign(
-            { userKey, userId, sessionId, deviceId}, 
+            { userKey, userId, sessionId, deviceId, role, schoolId, jti}, 
             this.config.dotEnv.SHORT_TOKEN_SECRET, 
             {expiresIn: this.shortTokenExpiresIn
         })
@@ -55,23 +61,46 @@ module.exports = class TokenManager {
     verifyLongToken({token}){
         return this._verifyToken({token, secret: this.config.dotEnv.LONG_TOKEN_SECRET,})
     }
+    
     verifyShortToken({token}){
         return this._verifyToken({token, secret: this.config.dotEnv.SHORT_TOKEN_SECRET,})
     }
 
+    async revokeToken({ jti }) {
+        // Add the token ID to blocklist
+        // TTL bounded to 15m (15 * 60) matching Access Token default lifespan
+        await this.cache.key.set({
+        key: `blocked_jti:${jti}`,
+        data: 'true',
+        ttl: 15 * 60,
+        });
+    }
+
+    async isTokenRevoked({ jti }) {
+        const isRevoked = await this.cache.key.get({ key: `blocked_jti:${jti}` });
+        return !!isRevoked;
+    }
 
     /** generate shortId based on a longId */
-    v1_createShortToken({__longToken, __device}){
+    async v1_createShortToken({__headers, __device}){
+        const token = __headers.token;
+        if(!token)return {error: 'missing token '};
 
+        let decoded = this.verifyLongToken({ token });
+        if(!decoded){ return {error: 'invalid'} };
 
-        let decoded = __longToken;
-        console.log(decoded);
+        const isRevoked = await this.isTokenRevoked({ jti: decoded.jti });
+        if (isRevoked) {
+            return { error: 'Token revoked' };
+        }
         
         let shortToken = this.genShortToken({
             userId: decoded.userId, 
             userKey: decoded.userKey,
+            role: decoded.role,
+            schoolId: decoded.schoolId,
             sessionId: nanoid(),
-            deviceId: md5(__device),
+            deviceId: md5(__device || 'unknown-device'),
         });
 
         return { shortToken };
