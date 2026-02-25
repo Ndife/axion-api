@@ -1,4 +1,5 @@
 const MiddlewaresLoader     = require('./MiddlewaresLoader');
+const MongoLoader           = require('./MongoLoader');
 const ApiHandler            = require("../managers/api/Api.manager");
 const LiveDB                = require('../managers/live_db/LiveDb.manager');
 const UserServer            = require('../managers/http/UserServer.manager');
@@ -35,7 +36,7 @@ module.exports = class ManagersLoader {
             aeon,
             managers: this.managers, 
             validators: this.validators,
-            // mongomodels: this.mongomodels,
+            mongomodels: this.mongomodels,
             resourceNodes: this.resourceNodes,
         };
         
@@ -47,11 +48,11 @@ module.exports = class ManagersLoader {
             customValidators: require('../managers/_common/schema.validators'),
         });
         const resourceMeshLoader  = new ResourceMeshLoader({})
-        // const mongoLoader      = new MongoLoader({ schemaExtension: "mongoModel.js" });
+        const mongoLoader      = new MongoLoader({ schemaExtension: "mongoModel.js" });
 
         this.validators           = validatorsLoader.load();
         this.resourceNodes        = resourceMeshLoader.load();
-        // this.mongomodels          = mongoLoader.load();
+        this.mongomodels          = mongoLoader.load();
 
     }
 
