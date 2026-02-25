@@ -37,7 +37,8 @@ erDiagram
         ObjectId _id
         String name
         Number capacity
-        Array resources
+        Number currentStudents
+        Array resources "[ { name, quantity } ]"
         ObjectId schoolId
     }
 
