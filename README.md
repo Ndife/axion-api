@@ -105,9 +105,19 @@ This API utilizes a **Hybrid Token Architecture** to balance maximum security (r
 
 ### Production Deployment
 
-1. **Database**: Use a managed MongoDB service that supports replica sets natively (e.g., **MongoDB Atlas**).
-2. **Hosting**: Deploy the Node.js application to a public hosting service (e.g., Render, Railway, DigitalOcean App Platform, Heroku). Populate the exact Environment Variables within the hosting provider's dashboard.
-3. **Caching**: Use a managed Redis instance (e.g., Upstash or Render Redis) and populate the `REDIS_URI`.
+1. **Database Backend (MongoDB Atlas)**:
+   - Create an M0 Free Tier Cluster on **MongoDB Atlas** (automatically provisions as a Replica Set for ACID Transactions).
+   - Under **Database Access**, create a user and copy the password.
+   - Under **Network Access**, add `0.0.0.0/0` (Allow Access from Anywhere) so Render's dynamic and rolling IP addresses can connect.
+   - Use the Node.js connection string and ensure you add the database name before the `?` parameters (e.g., `...mongodb.net/school_management?retryWrites=...`)
+2. **Caching & Rejection Blocklist (Render Redis)**:
+   - Create a free **Redis** instance directly in Render.
+   - Copy the "Internal Connection String".
+3. **API Web Service (Render)**:
+   - Deploy as a **Web Service** tied to your Git repository.
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Environment Variables**: Provide `MONGO_URI`, `REDIS_URI`, `LONG_TOKEN_SECRET`, `SHORT_TOKEN_SECRET`, and `NACL_SECRET` exactly as configured in the steps above.
 
 ---
 
